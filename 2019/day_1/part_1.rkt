@@ -2,7 +2,7 @@
 ;; Specifically, to find the fuel required for a module:
 ;; take its mass, divide by three, round down, and subtract 2.
 
-;; usage: `cat 1.input | 1.rkt`
+;; usage: `cat input.txt | 1.rkt`
 
 #lang racket/base
 
