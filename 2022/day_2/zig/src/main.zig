@@ -4,9 +4,9 @@ const OPPONENT_ROCK: u8 = 'A';
 const OPPONENT_PAPER: u8 = 'B';
 const OPPONENT_SCISSORS: u8 = 'C';
 
-const ME_ROCK: u8 = 'X';
-const ME_PAPER: u8 = 'Y';
-const ME_SCISSORS: u8 = 'Z';
+const STRATEGY_LOSE: u8 = 'X';
+const STRATEGY_DRAW: u8 = 'Y';
+const STRATEGY_WIN: u8 = 'Z';
 
 const ROCK_POINTS: u64 = 1;
 const PAPER_POINTS: u64 = 2;
@@ -28,33 +28,33 @@ pub fn main() !void {
     var buf: [4]u8 = undefined;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         var opponent = line[0];
-        var me = line[2];
+        var strategy = line[2];
 
-        const points = switch (me) {
-            ME_ROCK => blk: {
-                var points = ROCK_POINTS;
+        const points = switch (strategy) {
+            STRATEGY_LOSE => blk: {
+                var points = LOSE_POINTS;
                 switch (opponent) {
-                    OPPONENT_ROCK => break :blk points + DRAW_POINTS,
-                    OPPONENT_PAPER => break :blk points + LOSE_POINTS,
-                    OPPONENT_SCISSORS => break :blk points + WIN_POINTS,
+                    OPPONENT_ROCK => break :blk points + SCISSORS_POINTS,
+                    OPPONENT_PAPER => break :blk points + ROCK_POINTS,
+                    OPPONENT_SCISSORS => break :blk points + PAPER_POINTS,
                     else => std.debug.panic("unrecognized opponent operation", .{}),
                 }
             },
-            ME_PAPER => blk: {
-                var points = PAPER_POINTS;
+            STRATEGY_DRAW => blk: {
+                var points = DRAW_POINTS;
                 switch (opponent) {
-                    OPPONENT_ROCK => break :blk points + WIN_POINTS,
-                    OPPONENT_PAPER => break :blk points + DRAW_POINTS,
-                    OPPONENT_SCISSORS => break :blk points + LOSE_POINTS,
+                    OPPONENT_ROCK => break :blk points + ROCK_POINTS,
+                    OPPONENT_PAPER => break :blk points + PAPER_POINTS,
+                    OPPONENT_SCISSORS => break :blk points + SCISSORS_POINTS,
                     else => std.debug.panic("unrecognized opponent operation", .{}),
                 }
             },
-            ME_SCISSORS => blk: {
-                var points = SCISSORS_POINTS;
+            STRATEGY_WIN => blk: {
+                var points = WIN_POINTS;
                 switch (opponent) {
-                    OPPONENT_ROCK => break :blk points + LOSE_POINTS,
-                    OPPONENT_PAPER => break :blk points + WIN_POINTS,
-                    OPPONENT_SCISSORS => break :blk points + DRAW_POINTS,
+                    OPPONENT_ROCK => break :blk points + PAPER_POINTS,
+                    OPPONENT_PAPER => break :blk points + SCISSORS_POINTS,
+                    OPPONENT_SCISSORS => break :blk points + ROCK_POINTS,
                     else => std.debug.panic("unrecognized opponent operation", .{}),
                 }
             },
