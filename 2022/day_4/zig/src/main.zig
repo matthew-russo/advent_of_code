@@ -37,11 +37,11 @@ pub fn main() !void {
         }
 
         if (first_range_low < second_range_low) {
-            if (first_range_high >= second_range_high) {
+            if (first_range_high >= second_range_low) {
                 inclusive_ranges += 1;
             }
         } else if (first_range_low > second_range_low) {
-            if (first_range_high <= second_range_high) {
+            if (first_range_low <= second_range_high) {
                 inclusive_ranges += 1;
             }
         } else {
