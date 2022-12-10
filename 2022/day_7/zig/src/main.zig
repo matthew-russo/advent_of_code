@@ -15,6 +15,9 @@ fn alloc_id(i: *u64) u64 {
     return temp;
 }
 
+const TOTAL_SIZE: u64 = 70000000;
+const NEEDED_SIZE: u64 = 30000000;
+
 pub fn main() !void {
     var allocator_provider = std.heap.GeneralPurposeAllocator(.{}){};
     var allocator = allocator_provider.allocator();
@@ -89,20 +92,29 @@ pub fn main() !void {
         }
     }
 
-    var accumulator: u64 = 0;
-    _ = accumulateDirSizes(&all_dirs, root_id, &accumulator);
-    std.log.info("Sum of small dirs: {d}", .{accumulator});
+    var accumulator = std.ArrayList(u64).init(allocator);
+    var root_size = accumulateDirSizes(&all_dirs, root_id, &accumulator);
+    var free_space = TOTAL_SIZE - root_size;
+    var to_delete = NEEDED_SIZE - free_space;
+
+    var min: u64 = std.math.maxInt(u64);
+
+    for (accumulator.items) |dir_size| {
+        if (dir_size >= to_delete and dir_size < min) {
+            min = dir_size;
+        }
+    }
+
+    std.log.info("dir to delete: {d}", .{min});
 }
 
-fn accumulateDirSizes(all_dirs: *DirMap, dir_id: u64, accumulator: *u64) u64 {
+fn accumulateDirSizes(all_dirs: *DirMap, dir_id: u64, accumulator: *std.ArrayList(u64)) u64 {
     var curr_dir = all_dirs.*.getPtr(dir_id) orelse unreachable;
     var total_size: u64 = curr_dir.*.immediate_size;
     var child_iterator = curr_dir.*.children.iterator();
     while (child_iterator.next()) |child| {
         total_size += accumulateDirSizes(all_dirs, child.value_ptr.*, accumulator);
     }
-    if (total_size <= 100000) {
-        accumulator.* += total_size;
-    }
+    accumulator.*.append(total_size) catch unreachable;
     return total_size;
 }
