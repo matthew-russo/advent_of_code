@@ -17,6 +17,7 @@ pub fn main() !void {
 
     var stack_lines = StringLinkedList{};
     var stacks = std.ArrayList(CharLinkedList).init(allocator);
+    var staging = CharLinkedList{};
 
     var buf_reader = std.io.bufferedReader(file.reader());
     var in_stream = buf_reader.reader();
@@ -82,6 +83,13 @@ pub fn main() !void {
                 var curr: u16 = 0;
                 while (curr < count) {
                     var node = stacks.items[src - 1].popFirst() orelse unreachable;
+                    staging.prepend(node);
+                    curr += 1;
+                }
+
+                curr = 0;
+                while (curr < count) {
+                    var node = staging.popFirst() orelse unreachable;
                     stacks.items[dst - 1].prepend(node);
                     curr += 1;
                 }
