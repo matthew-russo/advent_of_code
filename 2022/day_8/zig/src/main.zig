@@ -21,88 +21,79 @@ pub fn main() !void {
     var num_cols = lines.items[0].len;
     var num_rows = lines.items.len;
 
-    var visible_count: u64 = 0;
+    var highest_scenic_score: u64 = 0;
 
     var row_idx: u64 = 0;
     while (row_idx < num_rows) {
         var col_idx: u64 = 0;
         while (col_idx < num_cols) {
             if (row_idx == 0 or row_idx == num_rows - 1 or col_idx == 0 or col_idx == num_cols - 1) {
-                visible_count += 1;
                 col_idx += 1;
                 continue;
             }
 
             var curr = charToNum(lines.items[row_idx][col_idx]);
 
-            // check if everything to the left is shorter
-            var visible = true;
+            var left: u64 = 0;
+            var right: u64 = 0;
+            var up: u64 = 0;
+            var down: u64 = 0;
+
             var temp_checker: i64 = @intCast(i64, col_idx) - 1;
             while (temp_checker >= 0) {
                 var other = charToNum(lines.items[row_idx][@intCast(usize, temp_checker)]);
                 if (other >= curr) {
-                    visible = false;
+                    left = col_idx - @intCast(u64, temp_checker);
                     break;
                 }
                 temp_checker -= 1;
             }
-
-            if (visible) {
-                visible_count += 1;
-                col_idx += 1;
-                continue;
+            if (left == 0) {
+                left = col_idx;
             }
 
-            // check if everything to the right is shorter
-            visible = true;
             temp_checker = @intCast(i64, col_idx) + 1;
             while (temp_checker < num_cols) {
                 var other = charToNum(lines.items[row_idx][@intCast(usize, temp_checker)]);
                 if (other >= curr) {
-                    visible = false;
+                    right = @intCast(u64, temp_checker) - col_idx;
                     break;
                 }
                 temp_checker += 1;
             }
-
-            if (visible) {
-                visible_count += 1;
-                col_idx += 1;
-                continue;
+            if (right == 0) {
+                right = num_cols - col_idx - 1;
             }
 
-            // check if everything to the top is shorter
-            visible = true;
             temp_checker = @intCast(i64, row_idx) - 1;
             while (temp_checker >= 0) {
                 var other = charToNum(lines.items[@intCast(usize, temp_checker)][col_idx]);
                 if (other >= curr) {
-                    visible = false;
+                    up = row_idx - @intCast(u64, temp_checker);
                     break;
                 }
                 temp_checker -= 1;
             }
-
-            if (visible) {
-                visible_count += 1;
-                col_idx += 1;
-                continue;
+            if (up == 0) {
+                up = row_idx;
             }
 
-            // check if everything to the bottom is shorter
-            visible = true;
             temp_checker = @intCast(i64, row_idx) + 1;
             while (temp_checker < num_rows) {
                 var other = charToNum(lines.items[@intCast(usize, temp_checker)][col_idx]);
                 if (other >= curr) {
-                    visible = false;
+                    down = @intCast(u64, temp_checker) - row_idx;
                     break;
                 }
                 temp_checker += 1;
             }
+            if (down == 0) {
+                down = num_rows - row_idx - 1;
+            }
 
-            if (visible) {
-                visible_count += 1;
+            var scenic_score = left * right * up * down;
+            if (scenic_score > highest_scenic_score) {
+                highest_scenic_score = scenic_score;
             }
 
             col_idx += 1;
@@ -110,7 +101,7 @@ pub fn main() !void {
         row_idx += 1;
     }
 
-    std.log.info("visible count is {d}", .{visible_count});
+    std.log.info("highest scenic score is {d}", .{highest_scenic_score});
 }
 
 fn charToNum(c: u8) u8 {
