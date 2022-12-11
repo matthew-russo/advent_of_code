@@ -15,13 +15,10 @@ pub fn main() !void {
     var buf_reader = std.io.bufferedReader(file.reader());
     var in_stream = buf_reader.reader();
 
-    var head_x: i64 = 0;
-    var head_y: i64 = 0;
-    var tail_x: i64 = 0;
-    var tail_y: i64 = 0;
+    var knots: [10]Position = [_]Position{Position{ .x = 0, .y = 0 }} ** 10;
 
     var visited_tail_positions = std.AutoHashMap(Position, void).init(allocator);
-    visited_tail_positions.put(Position{ .x = tail_x, .y = tail_y }, {}) catch unreachable;
+    visited_tail_positions.put(Position{ .x = 0, .y = 0 }, {}) catch unreachable;
 
     var buf: [1024]u8 = undefined;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
@@ -32,80 +29,89 @@ pub fn main() !void {
 
         var i: u64 = 0;
         while (i < magnitude) {
+            var head = &knots[0];
             if (std.mem.eql(u8, dir, "R")) {
-                head_x += 1;
+                head.*.x += 1;
             } else if (std.mem.eql(u8, dir, "L")) {
-                head_x -= 1;
+                head.*.x -= 1;
             } else if (std.mem.eql(u8, dir, "U")) {
-                head_y += 1;
+                head.*.y += 1;
             } else if (std.mem.eql(u8, dir, "D")) {
-                head_y -= 1;
+                head.*.y -= 1;
             } else {
                 std.debug.panic("unknow direction: {s}", .{dir});
             }
 
-            if (head_x - tail_x > 1) {
-                // need to move tail to the right
-                if (head_y - tail_y == 1) {
-                    // need to move diagonaly up-right
-                    tail_y += 1;
-                    tail_x += 1;
-                } else if (tail_y - head_y == 1) {
-                    // need to move diagonaly down-right
-                    tail_y -= 1;
-                    tail_x += 1;
-                } else {
-                    // just move right
-                    tail_x += 1;
+            var knot_idx: u64 = 1;
+            while (knot_idx < 10) {
+                var in_front = &knots[knot_idx - 1];
+                var curr = &knots[knot_idx];
+
+                if (in_front.*.x - curr.*.x > 1) {
+                    // need to move tail to the right
+                    if (in_front.*.y - curr.*.y >= 1) {
+                        // need to move diagonaly up-right
+                        curr.*.y += 1;
+                        curr.*.x += 1;
+                    } else if (curr.*.y - in_front.*.y >= 1) {
+                        // need to move diagonaly down-right
+                        curr.*.y -= 1;
+                        curr.*.x += 1;
+                    } else {
+                        // just move right
+                        curr.*.x += 1;
+                    }
+                } else if (curr.*.x - in_front.*.x > 1) {
+                    // need to move tail to the left
+                    if (in_front.*.y - curr.*.y >= 1) {
+                        // need to move diagonaly up-left
+                        curr.*.y += 1;
+                        curr.*.x -= 1;
+                    } else if (curr.*.y - in_front.*.y >= 1) {
+                        // need to move diagonaly down-left
+                        curr.*.y -= 1;
+                        curr.*.x -= 1;
+                    } else {
+                        // just move left
+                        curr.*.x -= 1;
+                    }
+                } else if (in_front.*.y - curr.*.y > 1) {
+                    // need to move tail up
+                    if (in_front.*.x - curr.*.x >= 1) {
+                        // need to move diagonally up-right
+                        curr.*.y += 1;
+                        curr.*.x += 1;
+                    } else if (curr.*.x - in_front.*.x >= 1) {
+                        // need to move diagonally up-left
+                        curr.*.y += 1;
+                        curr.*.x -= 1;
+                    } else {
+                        // just move up
+                        curr.*.y += 1;
+                    }
+                } else if (curr.*.y - in_front.*.y > 1) {
+                    // need to move tail down
+                    if (in_front.*.x - curr.*.x >= 1) {
+                        // need to move diagonally down-right
+                        curr.*.y -= 1;
+                        curr.*.x += 1;
+                    } else if (curr.*.x - in_front.*.x >= 1) {
+                        // need to move diagonally down-left
+                        curr.*.y -= 1;
+                        curr.*.x -= 1;
+                    } else {
+                        // just move down
+                        curr.*.y -= 1;
+                    }
                 }
-            } else if (tail_x - head_x > 1) {
-                // need to move tail to the left
-                if (head_y - tail_y == 1) {
-                    // need to move diagonaly up-left
-                    tail_y += 1;
-                    tail_x -= 1;
-                } else if (tail_y - head_y == 1) {
-                    // need to move diagonaly down-left
-                    tail_y -= 1;
-                    tail_x -= 1;
-                } else {
-                    // just move left
-                    tail_x -= 1;
-                }
-            } else if (head_y - tail_y > 1) {
-                // need to move tail up
-                if (head_x - tail_x == 1) {
-                    // need to move diagonally up-right
-                    tail_y += 1;
-                    tail_x += 1;
-                } else if (tail_x - head_x == 1) {
-                    // need to move diagonally up-left
-                    tail_y += 1;
-                    tail_x -= 1;
-                } else {
-                    // just move up
-                    tail_y += 1;
-                }
-            } else if (tail_y - head_y > 1) {
-                // need to move tail down
-                if (head_x - tail_x == 1) {
-                    // need to move diagonally down-right
-                    tail_y -= 1;
-                    tail_x += 1;
-                } else if (tail_x - head_x == 1) {
-                    // need to move diagonally down-left
-                    tail_y -= 1;
-                    tail_x -= 1;
-                } else {
-                    // just move down
-                    tail_y -= 1;
-                }
+
+                knot_idx += 1;
             }
 
-            // std.log.info("tail: ({d}, {d})", .{ tail_x, tail_y });
-
             // record tail location
-            visited_tail_positions.put(Position{ .x = tail_x, .y = tail_y }, {}) catch unreachable;
+            var tail = knots[9];
+            // std.log.info("tail: ({d}, {d})", .{ tail.x, tail.y });
+            visited_tail_positions.put(Position{ .x = tail.x, .y = tail.y }, {}) catch unreachable;
 
             i += 1;
         }
