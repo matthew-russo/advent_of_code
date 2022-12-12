@@ -10,14 +10,9 @@ pub fn main() !void {
     var cycles: i64 = 0;
     var reg: i64 = 1;
 
-    var acc: i64 = 0;
-
+    var screen: [240]u8 = [_]u8{'.'} ** 240;
     var buf: [1024]u8 = undefined;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
-        if (cycles > 220) {
-            break;
-        }
-
         var spliterator = std.mem.tokenize(u8, line, " ");
         var cmd = spliterator.next() orelse unreachable;
 
@@ -25,29 +20,48 @@ pub fn main() !void {
             var amt_str = spliterator.next() orelse unreachable;
             var amt = std.fmt.parseInt(i64, amt_str, 10) catch unreachable;
 
-            cycles += 1;
-            if (@rem(cycles - 20, 40) == 0) {
-                std.log.info("cycles: {d}, reg {d}", .{ cycles, reg });
-                acc += (reg * cycles);
+            var cycles_usize = @intCast(usize, cycles);
+            var horiz_pos = @intCast(usize, @rem(cycles, 40));
+            if (reg - 1 == horiz_pos) {
+                screen[cycles_usize] = '#';
+            } else if (reg == horiz_pos) {
+                screen[cycles_usize] = '#';
+            } else if (reg + 1 == horiz_pos) {
+                screen[cycles_usize] = '#';
             }
+            cycles += 1;
 
-            cycles += 1;
-            if (@rem(cycles - 20, 40) == 0) {
-                std.log.info("cycles: {d}, reg {d}", .{ cycles, reg });
-                acc += (reg * cycles);
+            cycles_usize = @intCast(usize, cycles);
+            horiz_pos = @intCast(usize, @rem(cycles, 40));
+            if (reg - 1 == horiz_pos) {
+                screen[cycles_usize] = '#';
+            } else if (reg == horiz_pos) {
+                screen[cycles_usize] = '#';
+            } else if (reg + 1 == horiz_pos) {
+                screen[cycles_usize] = '#';
             }
+            cycles += 1;
 
             reg += amt;
         } else if (std.mem.eql(u8, cmd, "noop")) {
-            cycles += 1;
-            if (@rem(cycles - 20, 40) == 0) {
-                std.log.info("cycles: {d}, reg {d}", .{ cycles, reg });
-                acc += (reg * cycles);
+            var cycles_usize = @intCast(usize, cycles);
+            var horiz_pos = @intCast(usize, @rem(cycles, 40));
+            if (reg - 1 == horiz_pos) {
+                screen[cycles_usize] = '#';
+            } else if (reg == horiz_pos) {
+                screen[cycles_usize] = '#';
+            } else if (reg + 1 == horiz_pos) {
+                screen[cycles_usize] = '#';
             }
+            cycles += 1;
         } else {
             std.debug.panic("unrecognized command: {s}", .{cmd});
         }
     }
 
-    std.log.info("acc is {d}", .{acc});
+    var row: u8 = 0;
+    while (row < 6) {
+        std.log.info("{s}", .{screen[(row * 40)..((row * 40) + 39)]});
+        row += 1;
+    }
 }
